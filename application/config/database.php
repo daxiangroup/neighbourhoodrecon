@@ -1,1 +1,1 @@
-local/application/config/database.php
+../../local/application/config/database.php

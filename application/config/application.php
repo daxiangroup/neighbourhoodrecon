@@ -1,1 +1,1 @@
-local/application/config/application.php
+../../local/application/config/application.php
