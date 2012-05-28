@@ -37,6 +37,15 @@ Route::get('/', function()
 	return View::make('home.index');
 });
 
+Route::get('account/create', function()
+{
+	return View::make('account/create');
+});
+Route::post('account/create', function()
+{
+  return 'You posted an account creation!';
+});
+
 /*
 |--------------------------------------------------------------------------
 | Application 404 & 500 Error Handlers
