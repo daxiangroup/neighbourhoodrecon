@@ -1,14 +1,9 @@
 @layout('layouts/master')
 
-<pre>
-<?php print_r($errors); ?>
-<?php echo 'test: '.print_r($errors->first('email'),true); ?>
-</pre>
-
 @section('content')
-    <h2>Account Create</h2>
+    <h2>Account Edit</h2>
 
-    {{ Form::open('account/create', 'POST', array('id'=>'frm-accountCreate')) }}
+    {{ Form::open('account/edit', 'POST', array('id'=>'frm-accountEdit')) }}
 
     @if (Session::get('errorMessage'))
         Uh Oh! Error: {{ Session::get('errorMessage') }}<br /><br />
@@ -16,7 +11,7 @@
 
     @include('account.form-user')
 
-    {{ Form::submit('Create Account!') }}
+    {{ Form::submit('Edit Account!') }}
 
     {{ Form::token(); }}
     {{ Form::close() }}
