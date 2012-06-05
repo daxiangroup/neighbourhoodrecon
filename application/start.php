@@ -2,6 +2,19 @@
 
 /*
 |--------------------------------------------------------------------------
+| Set Default Timezone
+|--------------------------------------------------------------------------
+|
+| For whatever reason, Laravel wants to set the timezone of the application
+| a to something that this application currently is not. So we want to 
+| specifically set it to Toronto.
+|
+*/
+
+date_default_timezone_set('America/Toronto');
+
+/*
+|--------------------------------------------------------------------------
 | PHP Display Errors Configuration
 |--------------------------------------------------------------------------
 |
