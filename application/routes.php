@@ -2,49 +2,88 @@
 
 /*
 |--------------------------------------------------------------------------
-| Application Routes
+| Public Routes
 |--------------------------------------------------------------------------
 |
-| Simply tell Laravel the HTTP verbs and URIs it should respond to. It is a
-| breeze to setup your application using Laravel's RESTful routing and it
-| is perfectly suited for building large applications and simple APIs.
-|
-| Let's respond to a simple GET request to http://example.com/hello:
-|
-|		Route::get('hello', function()
-|		{
-|			return 'Hello World!';
-|		});
-|
-| You can even respond to more than one URI:
-|
-|		Route::post(array('hello', 'world'), function()
-|		{
-|			return 'Hello World!';
-|		});
-|
-| It's easy to allow URI wildcards using (:num) or (:any):
-|
-|		Route::put('hello/(:any)', function($name)
-|		{
-|			return "Welcome, $name.";
-|		});
+| These are the public routes of the application.
 |
 */
 
 Route::get('/', function()
 {
-	return View::make('home.index');
+    return View::make('home.index');
 });
 
 Route::get('account/create', function()
 {
-	return View::make('account/create');
+    return View::make('account/create');
 });
-Route::post('account/create', function()
+Route::post('account/create', array('before'=>'csrf', function()
 {
-  return 'You posted an account creation!';
+    $input = Input::all();
+
+    // Validate the user input to ensure we have everything we need/want
+    $validation = new Services\UserValidator($input);
+
+    // If validation fails, send the user back to the account create form with
+    // error messages.
+    if ($validation->fails())
+    {
+        Input::flash();
+        return Redirect::to('account/create')
+            ->with_errors($validation->errors());
+    }
+
+    // Create a user object with the (now validated) user data, hashing the 
+    // password.
+    $user = new Entities\User($input, array('hash_password'=>TRUE));
+
+    // Try to save the new user object to the repo.
+    $success = Repositories\UserRepository::save($user);
+    // If we weren't successful saving the account, we need to let the user know
+    // and redirect them back to the create form.
+    if ( ! $success)
+    {
+        Session::flash('errorMessage', 'There was a problem saving your account');
+        return Redirect::to('account/create');        
+    }
+
+    $credentials = array('username'=>$user->get('email'), 'password'=>$input['password']);
+    if (Auth::attempt($credentials))
+    {
+        Session::flash('successMessage', 'You posted an account creation successfully!');
+        return Redirect::to('account/dashboard');
+    }
+
+    return Redirect::to('login');
+}));
+
+/*
+|--------------------------------------------------------------------------
+| Private Routes
+|--------------------------------------------------------------------------
+|
+| These routes require a user to be logged in before they are valid
+|
+*/
+
+Route::group(array('before' => 'auth'), function()
+{
+    Route::get('account/dashboard', function()
+    {
+        return View::make('account/dashboard');
+    });
+
+    Route::get('account/edit', function()
+    {
+        $user = new Entities\User(Auth::user()->id);
+        return View::make('account/edit')
+            ->with('input', $user->get_table_array());
+    });
 });
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -63,12 +102,12 @@ Route::post('account/create', function()
 
 Event::listen('404', function()
 {
-	return Response::error('404');
+    return Response::error('404');
 });
 
 Event::listen('500', function()
 {
-	return Response::error('500');
+    return Response::error('500');
 });
 
 /*
@@ -85,36 +124,36 @@ Event::listen('500', function()
 |
 | First, define a filter:
 |
-|		Route::filter('filter', function()
-|		{
-|			return 'Filtered!';
-|		});
+|       Route::filter('filter', function()
+|       {
+|           return 'Filtered!';
+|       });
 |
 | Next, attach the filter to a route:
 |
-|		Router::register('GET /', array('before' => 'filter', function()
-|		{
-|			return 'Hello World!';
-|		}));
+|       Router::register('GET /', array('before' => 'filter', function()
+|       {
+|           return 'Hello World!';
+|       }));
 |
 */
 
 Route::filter('before', function()
 {
-	// Do stuff before every request to your application...
+    // Do stuff before every request to your application...
 });
 
 Route::filter('after', function($response)
 {
-	// Do stuff after every request to your application...
+    // Do stuff after every request to your application...
 });
 
 Route::filter('csrf', function()
 {
-	if (Request::forged()) return Response::error('500');
+    if (Request::forged()) return Response::error('500');
 });
 
 Route::filter('auth', function()
 {
-	if (Auth::guest()) return Redirect::to('login');
+    if (Auth::guest()) return Redirect::to('login');
 });
